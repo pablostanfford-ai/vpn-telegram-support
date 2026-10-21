@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Поддержка VPN</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--tg-theme-bg-color, #0f2027);
+      color: var(--tg-theme-text-color, #e8eef2);
+      min-height: 100vh; padding: 16px;
+    }
+    .card {
+      background: var(--tg-theme-secondary-bg-color, #1a2f38);
+      border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    .sub { opacity: .65; font-size: 13px; margin-bottom: 16px; }
+    label { display: block; font-size: 13px; opacity: .8; margin: 12px 0 6px; }
+    select, textarea, input {
+      width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+      background: var(--tg-theme-bg-color, #0f2027); color: inherit; font-size: 15px;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    button {
+      width: 100%; margin-top: 18px; padding: 14px; border: none; border-radius: 10px;
+      background: var(--tg-theme-button-color, #3390ec); color: var(--tg-theme-button-text-color, #fff);
+      font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    button:disabled { opacity: .5; }
+    #success { display: none; text-align: center; padding: 30px 10px; }
+    #success .emoji { font-size: 52px; }
+    #ticketId { font-size: 22px; font-weight: 700; margin: 10px 0; color: var(--tg-theme-link-color, #6ab7ff); }
+  </style>
+</head>
+<body>
+  <div id="form-view">
+    <div class="card">
+      <h1>🛡️ Техподдержка VPN</h1>
+      <div class="sub">Опишите проблему — оператор ответит в чате бота.</div>
+
+      <label>Тип устройства</label>
+      <select id="device">
+        <option>Windows</option><option>macOS</option><option>Android</option>
+        <option>iOS</option><option>TV Box / Linux</option><option>Роутер</option>
+      </select>
+
+      <label>С чем проблема?</label>
+      <select id="topic">
+        <option>Не подключается</option>
+        <option>Медленная скорость</option>
+        <option>Не работает у отдельных сайтов/приложений</option>
+        <option>Проблема с подпиской / оплатой</option>
+        <option>Не приходит ключ / конфиг</option>
+        <option>Другое</option>
+      </select>
+
+      <label>Опишите проблему подробнее</label>
+      <textarea id="problem" placeholder="Например: сегодня утром перестал подключаться, ошибка «handshake failed», до этого работало..."></textarea>
+
+      <button id="submit">📨 Создать тикет</button>
+    </div>
+  </div>
+
+  <div id="success">
+    <div class="card">
+      <div class="emoji">✅</div>
+      <h2>Тикет создан!</h2>
+      <div id="ticketId"></div>
+      <p class="sub">Нажмите «Назад» и напишите нам в чат — оператор уже уведомлён и скоро ответит.</p>
+      <button onclick="tg.close()">Закрыть</button>
+    </div>
+  </div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+
+  const btn = document.getElementById('submit');
+  btn.addEventListener('click', async () => {
+    const problem = document.getElementById('problem').value.trim();
+    if (problem.length < 5) {
+      tg.showAlert('Пожалуйста, опишите проблему подробнее (минимум 5 символов).');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Отправка…';
+    try {
+      const res = await fetch('/api/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          init_data: tg.initData,
+          topic: document.getElementById('topic').value,
+          device: document.getElementById('device').value,
+          problem,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.detail || 'Ошибка сервера');
+      document.getElementById('form-view').style.display = 'none';
+      document.getElementById('success').style.display = 'block';
+      document.getElementById('ticketId').textContent = data.ticket_id;
+      tg.HapticFeedback.notificationOccurred('success');
+    } catch (e) {
+      tg.showAlert('Не удалось создать тикет: ' + e.message);
+      btn.disabled = false;
+      btn.textContent = '📨 Создать тикет';
+    }
+  });
+</script>
+</body>
+</html>

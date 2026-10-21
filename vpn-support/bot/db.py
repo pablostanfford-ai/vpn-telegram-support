@@ -50,7 +50,9 @@ class Ticket:
         return asdict(self)
 
 
-DB_PATH = "tickets.db"
+import os
+
+DB_PATH = os.environ.get("DB_PATH", "tickets.db")
 _lock = threading.Lock()
 
 

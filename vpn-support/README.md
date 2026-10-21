@@ -28,8 +28,15 @@ vpn-support/
 │   ├── index.html     # форма создания тикета (Telegram WebApp)
 │   └── admin.html     # панель оператора
 ├── requirements.txt
-└── .env.example
+├── .env.example
+└── DEPLOY-VPS.md    # подробная инструкция по запуску на VPS (Ubuntu + nginx + certbot + systemd)
 ```
+
+## 🚀 Запуск на VPS
+
+Полная пошаговая инструкция — в **[DEPLOY-VPS.md](DEPLOY-VPS.md)**: установка пакетов,
+домен и HTTPS (Let's Encrypt), nginx, firewall, автозапуск через systemd, привязка
+Mini App в BotFather, проверка, обновления, бэкапы и разбор частых проблем.
 
 ## Установка
 
